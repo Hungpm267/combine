@@ -22,6 +22,8 @@ class Product(models.Model):
     description = models.TextField()
     view_count = models.PositiveIntegerField(default= 0)
     comment = models.TextField(blank = True, null=True)
+    editing_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='editingUser', null=True, blank=True)
+    editing_ends_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f"product tên: ({self.name})"

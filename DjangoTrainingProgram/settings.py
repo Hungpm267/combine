@@ -171,5 +171,5 @@ EMAIL_HOST_USER = '21520901@gm.uit.edu.vn'  # Email của bạn
 EMAIL_HOST_PASSWORD = 'vfns bnwc cpfk lbyl' # Mật khẩu ứng dụng
 
 ADMINS = [
-    ('hungmanh2607', 'hungpm267@gmail.com'),
+    ('admin', 'mahhuq2k3@gmail.com'),
 ]
