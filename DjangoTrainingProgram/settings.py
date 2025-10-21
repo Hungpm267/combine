@@ -144,6 +144,7 @@ REST_FRAMEWORK = {
     ),
     # THÊM DÒNG NÀY VÀO
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'PAGE_SIZE': 2  # Bạn có thể đặt số lượng sản phẩm mỗi trang ở đây
 }
 
 
