@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from rest_framework import viewsets, permissions
-from .models import Category, Product,Comment
+from .models import Category, Product,Comment, UserVoucher
 from .serializers import CategorySerializer, ProductSerializer, CommentSerializer
 from rest_framework.response import Response
 from rest_framework import status
@@ -8,6 +8,7 @@ from rest_framework.decorators import action
 from django.db.models import Count
 from datetime import timedelta
 from django.utils import timezone
+from django.db import transaction
 
 # Create your views here.
 
@@ -92,6 +93,28 @@ class ProductViewSet(viewsets.ModelViewSet):
             return Response({'notify': 'gia han thanh cong'}, status=status.HTTP_202_ACCEPTED)
         else:
             return Response({'notify': 'bạn ko thể gia hạn khóa này'}, status=status.HTTP_403_FORBIDDEN)
+        
+    @action(detail=True, methods=['post'], url_path='claim_voucher')
+    def claim_voucher(self, request, pk=None):
+        with transaction.atomic():
+            product = Product.objects.select_for_update().get(pk= pk )
+            has_voucher = UserVoucher.objects.filter(user = request.user, product = product).exists()
+            if has_voucher:
+                return Response({'notify': 'ban da co voucher nay roi'}, status=status.HTTP_403_FORBIDDEN)
+            if not product.voucher_enable:
+                return Response({'notify': 'san pham nay ko co voucher'}, status=status.HTTP_204_NO_CONTENT)
+            if product.voucher_quantity <= 0:
+                return Response({'notify': 'da het voucher roi'}, status=status.HTTP_404_NOT_FOUND)
+            
+            product.voucher_quantity -= 1
+            product.save(update_fields=['voucher_quantity'])
+            voucherid = f"VOUCHER-NO-{request.user.id}"
+            voucher = UserVoucher.objects.create(voucher_code = voucherid, user = request.user, product = product)
+            
+            return Response({'notify': 'nhan voucher thanh cong'}, status=status.HTTP_200_OK)
+
+                
+                
             
     
 
