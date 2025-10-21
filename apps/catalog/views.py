@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status, viewsets, permissions
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
-from django.db.models import Count
+from django.db.models import Count, F
 from django.utils import timezone
 from django.db import transaction
 from .models import Category, Product,Comment, UserVoucher
@@ -116,15 +116,16 @@ class ProductViewSet(viewsets.ModelViewSet):
         with transaction.atomic():
             product = Product.objects.select_for_update().get(pk= pk )
             has_voucher = UserVoucher.objects.filter(user = request.user, product = product).exists()
-            if has_voucher:
-                return Response({'notify': 'ban da co voucher nay roi'}, status=status.HTTP_403_FORBIDDEN)
             if not product.voucher_enable:
                 return Response({'notify': 'san pham nay ko co voucher'}, status=status.HTTP_204_NO_CONTENT)
             if product.voucher_quantity <= 0:
                 return Response({'notify': 'da het voucher roi'}, status=status.HTTP_404_NOT_FOUND)
-            
-            product.voucher_quantity -= 1
-            product.save(update_fields=['voucher_quantity'])
+            if has_voucher:
+                return Response({'notify': 'ban da co voucher nay roi'}, status=status.HTTP_403_FORBIDDEN)
+                     
+            # product.voucher_quantity -= 1
+            # product.save(update_fields=['voucher_quantity'])
+            Product.objects.filter(pk=pk).update(voucher_quantity = F('voucher_quantity') - 1)
             voucherid = f"VOUCHER-NO-{request.user.id}"
             voucher = UserVoucher.objects.create(voucher_code = voucherid, user = request.user, product = product)    
             return Response({'notify': f'nhan voucher thanh cong với mã là {voucher}'}, status=status.HTTP_200_OK)

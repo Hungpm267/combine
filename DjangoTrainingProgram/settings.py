@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -128,7 +130,7 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-from datetime import timedelta
+
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
@@ -144,11 +146,11 @@ REST_FRAMEWORK = {
     ),
     # THÊM DÒNG NÀY VÀO
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
-    'PAGE_SIZE': 2  # Bạn có thể đặt số lượng sản phẩm mỗi trang ở đây
+    'PAGE_SIZE': 2,  # Bạn có thể đặt số lượng sản phẩm mỗi trang ở đây
+    'EXCEPTION_HANDLER': 'apps.api.exception_handler.custom_exception_handler'
 }
 
 
-import os
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
