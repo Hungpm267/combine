@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Category, Product, ProductImage, Comment
+from .models import Category, Product, ProductImage, Comment, UserVoucher
 from mptt.admin import MPTTModelAdmin 
 # Register your models here.
 
@@ -20,3 +20,4 @@ class ProductAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Comment)
+admin.site.register(UserVoucher)

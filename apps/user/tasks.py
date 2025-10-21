@@ -30,6 +30,7 @@ def check_db_health():
         with connection.cursor() as cursor:
             cursor.execute("SELECT 1")
         print("Database connection thì khỏe.")
+        mail_admins(subject= "thông tin sức khỏe DB", message = "vẫn ổn nha admin bro")
         return "Database is OK rồi đó"
     except Exception as e:
         # Nếu có lỗi, gửi email cảnh báo
@@ -43,6 +44,7 @@ def check_db_health():
         mail_admins(subject, message)
         print(f"Sent critical alert: DB health check failed! Error: {e}")
         return f"Database check failed: {e}"
+
 
 @shared_task
 def send_daily_signup_report():

@@ -1,10 +1,14 @@
 from django.shortcuts import render
 from rest_framework import viewsets, permissions
-from .models import Category, Product,Comment
+from .models import Category, Product,Comment, UserVoucher
 from .serializers import CategorySerializer, ProductSerializer, CommentSerializer
 from rest_framework.response import Response
+from rest_framework import status
 from rest_framework.decorators import action
 from django.db.models import Count
+from django.db import transaction
+from datetime import timedelta
+from django.utils import timezone
 
 # Create your views here.
 
@@ -26,7 +30,8 @@ class CategoryViewSet(viewsets.ModelViewSet):
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-    permission_classes = [permissions.AllowAny]
+    # permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -39,7 +44,84 @@ class ProductViewSet(viewsets.ModelViewSet):
     def dem_so_comment_tung_product(self, request):
         truyvan = Product.objects.annotate(comment_count=Count('comments')).values('comment_count', 'name').all()
         return Response(truyvan)
+    
+    @action(detail=True, methods=['get'], url_path='editable')
+    def check_editable(self, request, pk =None):
+        try:
+            product = self.get_object()
+        except Product.DoesNotExist:
+            return Response({'error': 'ko tồn tại product'}, status=status.HTTP_404_NOT_FOUND)
+        
+        is_expired = False
+        if product.editing_ends_at is not None:
+            is_expired = True if timezone.now() > product.editing_ends_at else False
+            
+        
+        if (product.editing_user is None or product.editing_user == request.user or is_expired ==True):
+            product.editing_user = request.user
+            product.editing_ends_at = timezone.now() + timedelta(minutes = 5)
+            product.save()
+            return Response({'notify': "bạn có thể edit sản phẩm này"}, status=status.HTTP_200_OK)
+        else:
+            return Response({'notify': 'bạn ko thể edit sản phẩm này vì có người khác đang edit'}, status=status.HTTP_403_FORBIDDEN)
+    
+    @action(detail = True, methods=['post'], url_path='release')
+    def release_edit(self, request, pk = None):
+        try:
+            product = self.get_object()
+        except Product.DoesNotExist:
+            return Response({'error': 'ko tồn tại product'}, status=status.HTTP_404_NOT_FOUND)
+        
+        if request.user == product.editing_user:
+            product.editing_user = None
+            product.editing_ends_at = None
+            product.save()
+            return Response({'notify': 'release khóa thành công'}, status=status.HTTP_200_OK)
+        else:
+            return Respone({'notify': 'release khóa thất bại'}, status=status.HTTP_403_FORBIDDEN)
+            
+    @action(detail=True, methods = ['post'], url_path='maintain')
+    def maintain_edit(self, request, pk):
+        try:
+            product = self.get_object()
+        except Product.DoesNotExist:
+            return Response({'error': 'ko tồn tại product'}, status=status.HTTP_404_NOT_FOUND)
+        
+        if request.user == product.editing_user:
+            product.editing_ends_at= timezone.now() + timedelta(minutes = 5)
+            product.save()
+            return Response({'notify': 'gia han thanh cong'}, status=status.HTTP_202_ACCEPTED)
+        else:
+            return Response({'notify': 'bạn ko thể gia hạn khóa này'}, status=status.HTTP_403_FORBIDDEN)
 
+    @action(detail=True, methods=['post'], url_path='claim_voucher')
+    def claim_voucher(self, request, pk=None):
+        # logic cốt lõi chỉ là:
+        # Khóa (select_for_update)
+        # Kiểm tra (3 câu if)
+        # Hành động (Trừ số lượng và Tạo voucher)
+        with transaction.atomic():
+            product = Product.objects.select_for_update().get(pk = pk)
+            user_has_voucher = UserVoucher.objects.filter(user = request.user, product=product).exists()
+            if user_has_voucher: 
+                return Response({'notify': 'user đã có voucher rồi'}, status=status.HTTP_403_FORBIDDEN)
+            if not product.voucher_enable:
+                return Response({'notify': 'product này ko có voucher áp dụng'}, status=status.HTTP_204_NO_CONTENT)
+            if product.voucher_quantity <= 0:
+                return Response({'notify': 'số lượng voucher đã hết'}, status=status.HTTP_404_NOT_FOUND)
+            
+            product.voucher_quantity -= 1
+            product.save(update_fields=['voucher_quantity'])
+            user = request.user
+            product = product
+            voucher_code = f"VOUCHER-CODE={user.id}"
+            new_voucher = UserVoucher.objects.create(
+                voucher_code=voucher_code, 
+                user=user, 
+                product=product
+            )
+            return Response({'notify': f"voucher của bạn là {new_voucher.voucher_code}"}, status=status.HTTP_201_CREATED)
+    
 
 
 class CommentViewSet(viewsets.ModelViewSet):

@@ -27,9 +27,9 @@ app.conf.beat_schedule = {
         'task': 'apps.user.tasks.check_db_health',
         'schedule': crontab(),  # crontab() rỗng tương đương với mỗi phút
     },
-    'send-signup-report-every-two-minutes': {
+    'send-signup-report-every-minutes': {
         'task': 'apps.user.tasks.send_daily_signup_report',
         # Cấu hình crontab để chạy mỗi 2 phút
-        'schedule': crontab(), 
+        'schedule': crontab(hour = 23, minute = 22), 
     },
 }

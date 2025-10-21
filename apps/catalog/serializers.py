@@ -26,7 +26,8 @@ class ProductSerializer(serializers.ModelSerializer):
     comment = CommentSerializer(many =True, source = 'comments')
     class Meta:
         model = Product
-        fields = ['id', 'name', 'thumbnail', 'category', 'description', 'images', 'comment', 'view_count']
+        fields = ['id', 'name', 'thumbnail', 'category', 'description', 'images', 'comment', 'view_count', 
+                  'voucher_enable', 'voucher_quantity']
 
 
 
