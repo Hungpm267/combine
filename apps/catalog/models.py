@@ -1,14 +1,15 @@
 from django.db import models
-from mptt.models import MPTTModel, TreeForeignKey 
+from mptt.models import MPTTModel, TreeForeignKey
 from django.contrib.auth.models import User
 # Create your models here.
 class Category(MPTTModel):
+    """bảng category"""
     name = models.CharField(max_length=250, unique=True)
     parent = TreeForeignKey('self', on_delete=models.CASCADE, related_name = 'children', null = True, blank=True)
     image = models.ImageField(upload_to='imageOfCategory', blank=True, null=True)
 
     class MPTTMeta:
-        # Sắp xếp các category cùng cấp theo tên
+        """Sắp xếp các category cùng cấp theo tên"""
         order_insertion_by = ['name']
 
     def __str__(self):
@@ -16,6 +17,7 @@ class Category(MPTTModel):
 
 
 class Product(models.Model):
+    """bảng product"""
     name = models.CharField(max_length=250)
     thumbnail = models.ImageField(upload_to='thumbnailOfProduct', blank=True, null=True)
     category = models.ManyToManyField(Category, related_name='products')
@@ -29,8 +31,9 @@ class Product(models.Model):
 
     def __str__(self):
         return f"product tên: ({self.name})"
-    
+
 class UserVoucher(models.Model):
+    """bảng trung gian của user và category cho quan hệ manytomany"""
     voucher_code = models.CharField(max_length=20)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='vouchers')
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='voucher_claims')
@@ -46,6 +49,7 @@ class ProductImage(models.Model):
         return f"đây là images của {self.product.name}"
 
 class Comment(models.Model):
+    """model comment"""
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='comments')
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comments')
     content = models.TextField()
