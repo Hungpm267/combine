@@ -90,12 +90,5 @@ class CategoryTestAPI(APITestCase):
         self.assertEqual(Category.objects.count(), 1)
         
         # ============================================================================================
-        
-    # def test_api_custom_action_stats_success(self):
-    #     """ api stats đếm số product của category """
-    #     response = self.client.get(reverse('category-stats'))
-    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
-    #     self.assertIsInstance(response.data, list)
-      
 
     
