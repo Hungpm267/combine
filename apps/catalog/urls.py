@@ -4,7 +4,7 @@ from django.urls import path, include
 from .views import CategoryViewSet, ProductViewSet, CommentViewSet
 
 router = routers.DefaultRouter()
-router.register(r'categories', CategoryViewSet)
+router.register(r'categories', CategoryViewSet, basename='category')
 router.register(r'products', ProductViewSet)
 
 product_router = routers.NestedDefaultRouter(router, r'products', lookup = 'product')
