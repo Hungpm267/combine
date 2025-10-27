@@ -1,0 +1,7 @@
+# File .dockerignore
+__pycache__/
+*.pyc
+.git/
+.venv/
+.vscode/
+db.sqlite3

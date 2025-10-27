@@ -130,7 +130,8 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-
+# settings.py
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
